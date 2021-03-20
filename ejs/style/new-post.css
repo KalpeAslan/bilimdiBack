@@ -1,0 +1,43 @@
+nav.navbar.navbar-expand-lg.navbar-light.bg-light.navbar-admin {
+    padding: 0 100px;
+    height: 50px;
+}
+.textarea-buttons{
+    display: flex;
+    align-items: center;
+    height: auto;
+}
+.textarea-buttons li {
+    border: 1px solid rgba(0,0,0,.125) !important;
+}
+
+.bi {
+    font-size: 20px;
+    margin: 0 10px;
+}
+.new-post-form-control {
+    height: 300px;
+}
+
+
+.show-img-methods {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+}
+.list-group-item-img-methods {
+    position: absolute;
+    top: 48px;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.li-group-item-img-upload-form {
+    display: flex;
+    align-items: center;
+}
+.hidden {
+    display: none;
+}

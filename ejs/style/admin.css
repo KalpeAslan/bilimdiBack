@@ -1,0 +1,17 @@
+nav.navbar.navbar-expand-lg.navbar-light.bg-light.navbar-admin {
+    padding: 0 100px;
+    height: 50px;
+}
+
+.admin-blog-body {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.blog-post-card {
+    width: 30vw;
+}

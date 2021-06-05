@@ -8,6 +8,7 @@ const fileupload = require('express-fileupload');
 const path = require('path');
 const dirname = path.resolve();
 
+console.log('OQYADMIN works on: ' + PORT)
 app.use(fileupload({}))
 
 app.use(express.static(__dirname + '/ejs'));
@@ -40,24 +41,35 @@ app.post('/branches/postBranches', jsonParser, (req, res) => {
     console.log(req.body);
     const connect = async () => {
         const allBranches = await profDB.postBranches(req.body);
+        console.log(allBranches)
         res.send(allBranches);
     };
     connect();
 });
 
 
-
+app.get('/allProfs', (req, res) => {
+    const connect = async () => {
+        const allProfs = await profDB.getAllProfs();
+        res.send(allProfs)
+    }
+    connect()
+})
 
 app.post('/profs/postProfs', jsonParser, (req, res) => {
-    console.log('postProfs');
-    console.log(req.body)
     const connect = async () => {
         const allProfs = await profDB.postProfs(req.body);
         res.send(allProfs)
     }
     connect();
 });
-
+app.post('/getFilteredByScore',jsonParser, (req, res)=> {
+    const connect = ()=> {
+        const {score, filteredBySubjProfs} = req.body
+         res.send(profDB.getFilteredByScore(score, filteredBySubjProfs))
+    }
+    connect()
+})
 
 
 
@@ -73,7 +85,7 @@ app.use(multer({
 
 app.post("/upload", async (req, res) => {
     const filedata = req.files.filedata;
-    const files = await fs.readdir('./uploads/','utf-8',(err,data)=>data);
+    const files = await fs.readdir('./uploads/', 'utf-8', (err, data) => data);
     console.log('files')
     console.log(files)
 });
@@ -135,14 +147,13 @@ app.post('/admin', (req, res) => {
 app.post('/branches/postBranches/telegram', (req, res) => {
     console.log('postBranches/telegram');
     const subj = Object.keys(req.body)[0];
-    console.log(req.body);
     const connect = async () => {
         const allBranches = await profDB.postBranches(subj, true);
         const keys = Object.keys(allBranches[subj]);
-        console.log(keys);
         res.send(keys);
     }
     connect();
+    res.send('Ok')
 });
 app.post('/branches/setProfsByBraches/telegram', jsonParser, (req, res) => {
     console.log('setProfsByBraches/telegram');

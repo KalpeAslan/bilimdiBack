@@ -10,42 +10,40 @@ const client = new MongoClient(uri, {
 });
 
 
-
-
-
-
 class ProfDB {
 
-    getTrueSubj(subjects){
-        const subjectsList =  ["ГеоБио", "Творч", "ФизМат", "БиоХим", "ГеоИст", "КазКЛит", "РусРЛит", 
-                                "ИноИст", "КазЛит/РусЛит", "МатГео", "ИстЧоп", "ФизХим", "ГеоИно"];
-        return subjectsList.includes(subjects.full) ? subjects.full : subjects.reversed
+    getTrueSubj(subjects) {
+        const subjectsList = ["ГеоБио", "Творч", "ФизМат", "БиоХим", "ГеоИст", "КазКЛит", "РусРЛит",
+            "ИноИст", "КазЛит/РусЛит", "МатГео", "ИстЧоп", "ФизХим", "ГеоИно"
+        ].map(subj => subj.toLowerCase());
+        return subjectsList.includes(subjects.full.toLowerCase()) ? subjects.full : subjects.reversed
     }
 
-    async getBranches(chosenSubj,isTrueSubj = false){
+    async getBranches(chosenSubj, isTrueSubj = false) {
         this.db = {};
-        const subject = isTrueSubj ? chosenSubj  : this.getTrueSubj(chosenSubj);
+        const subject = (isTrueSubj ? chosenSubj : this.getTrueSubj(chosenSubj)).toLowerCase();
         try {
             await client.connect();
             const subjects = client.db().collection('subjects');
-            const all = await subjects.findOne({[subject]: {$exists: true}}, {
-                projection: {
-                    [subject]: 1 
+            const all = await subjects.findOne({
+                [subject]: {
+                    $exists: true
                 }
-             });
+            }, {
+                projection: {
+                    [subject]: 1
+                }
+            });
             console.log(all);
             this.db = all;
             return all;
         } catch (e) {
             console.log('ERROR GetBranches')
             console.log(e);
-        } 
+        }
         return this.db;
     }
 
-    
-    
-    
 
     getProfsBySubj(dbSubj) {
         const keys = Object.keys(dbSubj);
@@ -58,30 +56,79 @@ class ProfDB {
         return res;
     }
 
-
-    async postBranches(subjects,isTrueSubj = false){
-        console.log(isTrueSubj)
-        let db = await this.getBranches(subjects,isTrueSubj);
-        return db;
+    async getAllProfs() {
+        try {
+            await client.connect();
+            const subjects = client.db().collection('subjects');
+            const all = await subjects.findOne()
+            console.log(all)
+            const profs = Object.entries(all).reduce((acc, [key, value], index) => {
+                Object.entries(value).forEach(([keyArea, valueCodes]) => {
+                    Object.entries(valueCodes).forEach(([keyProf, valueCode]) => {
+                        if (key in acc) {
+                            acc[key].push({
+                                code: valueCode.code,
+                                name: valueCode.name,
+                                min: valueCode.min
+                            })
+                        } else {
+                            acc[key] = []
+                            acc[key].push({
+                                code: valueCode.code,
+                                name: valueCode.name,
+                                min: valueCode.min
+                            })
+                        }
+                    })
+                })
+                return acc
+            }, {})
+            this.db = all;
+            delete profs["_id"]
+            return profs
+        } catch (e) {
+            console.log('ERROR GetAllProfs')
+            console.log(e);
+        }
+        return this.db;
     }
 
-    
 
-    async postProfs(subjects){
+    async postBranches(subjects, isTrueSubj = false) {
+        let db = await this.getBranches(subjects, isTrueSubj);
+        return db[Object.keys(db)[1]];
+    }
+
+    getFilteredByScore(score, filteredBySubjProfs) {
+        const res =  Object.entries(filteredBySubjProfs).reduce((acc, [keySubj, profsValue]) => {
+            profsValue = profsValue.filter(prof => Number(prof.min) < score)
+            acc[keySubj] = profsValue
+            return acc
+        }, {})
+        return res
+    }
+
+
+
+    async postProfs(subjects) {
         const branches = await this.getBranches(subjects);
         const db = Object.keys(branches)[1];
         return this.getProfsBySubj(branches[db]);
     }
-    
-     async setProfsByBraches(chosenBranches, subject,score,isQouta = false) {
+
+    async setProfsByBraches(chosenBranches, subject, score, isQouta = false) {
         await client.connect();
         const elems = client.db().collection('subjects');
-        const db = await elems.findOne({[subject]: {$exists: true}}, {
-            projection: {
-                [subject]: 1 
+        const db = await elems.findOne({
+            [subject]: {
+                $exists: true
             }
-         });
-         this.db = db[subject];
+        }, {
+            projection: {
+                [subject]: 1
+            }
+        });
+        this.db = db[subject];
         const res = chosenBranches.reduce((acc, branch, i) => {
             for (const codeIn in this.db[branch]) {
                 const qoutaOrMin = isQouta ? 'minWithQuota' : 'min';
@@ -124,43 +171,15 @@ class ProfDB {
 
         const keys = Object.keys(res);
 
-        const grants = keys.map((key,i)=>{
-            const grant = `${i +1} ${res[key].code} ${res[key].name}`;
+        const grants = keys.map((key, i) => {
+            const grant = `${i + 1} ${res[key].code} ${res[key].name}`;
             return grant
         });
-
         console.log(grants);
-
-
         return grants;
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 const profDB = new ProfDB(uri);

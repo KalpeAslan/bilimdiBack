@@ -1,3 +1,4 @@
+const db = require('./db.js')
 const {
     MongoClient
 } = require("mongodb");
@@ -100,7 +101,7 @@ class ProfDB {
     }
 
     getFilteredByScore(score, filteredBySubjProfs) {
-        const res =  Object.entries(filteredBySubjProfs).reduce((acc, [keySubj, profsValue]) => {
+        const res = Object.entries(filteredBySubjProfs).reduce((acc, [keySubj, profsValue]) => {
             profsValue = profsValue.filter(prof => Number(prof.min) < score)
             acc[keySubj] = profsValue
             return acc
@@ -116,9 +117,11 @@ class ProfDB {
         return this.getProfsBySubj(branches[db]);
     }
 
+
     async setProfsByBraches(chosenBranches, subject, score, isQouta = false) {
         await client.connect();
         const elems = client.db().collection('subjects');
+        console.log(subject)
         const db = await elems.findOne({
             [subject]: {
                 $exists: true
@@ -168,15 +171,7 @@ class ProfDB {
 
         }, {});
 
-
-        const keys = Object.keys(res);
-
-        const grants = keys.map((key, i) => {
-            const grant = `${i + 1} ${res[key].code} ${res[key].name}`;
-            return grant
-        });
-        console.log(grants);
-        return grants;
+        return res
     }
 
 }

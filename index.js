@@ -32,10 +32,6 @@ app.get('/new-post', (req, res) => {
 })
 
 
-
-
-
-
 app.post('/branches/postBranches', jsonParser, (req, res) => {
     console.log('postBranches')
     console.log(req.body);
@@ -142,6 +138,18 @@ app.post('/admin', (req, res) => {
 })
 
 
+app.post('/branches/setProfsByBraches', jsonParser, (req, res) => {
+    const connect = async () => {
+        const subj = req.body.subjects;
+        const branches = req.body.branches;
+        const score = req.body.score;
+        const allBranches = await profDB.setProfsByBraches(branches, subj, score);
+        res.send(allBranches);
+    }
+    connect();
+});
+
+
 
 
 app.post('/branches/postBranches/telegram', (req, res) => {
@@ -155,6 +163,12 @@ app.post('/branches/postBranches/telegram', (req, res) => {
     connect();
     res.send('Ok')
 });
+
+
+
+
+
+
 app.post('/branches/setProfsByBraches/telegram', jsonParser, (req, res) => {
     console.log('setProfsByBraches/telegram');
     const connect = async () => {
@@ -162,7 +176,6 @@ app.post('/branches/setProfsByBraches/telegram', jsonParser, (req, res) => {
         const branches = req.body.branches;
         const score = req.body.score;
         const allBranches = await profDB.setProfsByBraches(branches, subj, score);
-
         res.send(allBranches);
     }
     connect();

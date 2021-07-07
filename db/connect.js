@@ -1,4 +1,4 @@
-const db = require('./db.js')
+const dbJs = require('./db.js')
 const {
     MongoClient
 } = require("mongodb");
@@ -20,26 +20,52 @@ class ProfDB {
         return subjectsList.includes(subjects.full.toLowerCase()) ? subjects.full : subjects.reversed
     }
 
-    async getBranches(chosenSubj, isTrueSubj = false) {
+    getColorBySubject(subject) {
+        switch (subject) {
+            case 'геобио':
+                return '#47c293'
+            case 'творч':
+                return '#EFB1C2'
+        }
+    }
+
+
+    getBranches() {
+        return Object.keys(dbJs).reduce((acc, current) => {
+            Object.keys(dbJs[current]).forEach(item => {
+                if (!acc.includes(item)) {
+                    acc.push(item)
+                }
+            })
+            return acc
+        }, [])
+    }
+
+
+    getAll() {
+        return dbJs
+    }
+
+    async getBranchesBySubjects(chosenSubj, isTrueSubj = false) {
         this.db = {};
         const subject = (isTrueSubj ? chosenSubj : this.getTrueSubj(chosenSubj)).toLowerCase();
         try {
-            await client.connect();
-            const subjects = client.db().collection('subjects');
-            const all = await subjects.findOne({
-                [subject]: {
-                    $exists: true
-                }
-            }, {
-                projection: {
-                    [subject]: 1
-                }
-            });
-            console.log(all);
+            // await client.connect();
+            // const subjects = client.db().collection('subjects');
+            // const all = await subjects.findOne({
+            //     [subject]: {
+            //         $exists: true
+            //     }
+            // }, {
+            //     projection: {
+            //         [subject]: 1
+            //     }
+            // });
+            const all = dbJs[subject]
             this.db = all;
             return all;
         } catch (e) {
-            console.log('ERROR GetBranches')
+            console.log('ERROR getBranchesBySubjects')
             console.log(e);
         }
         return this.db;
@@ -59,10 +85,10 @@ class ProfDB {
 
     async getAllProfs() {
         try {
-            await client.connect();
-            const subjects = client.db().collection('subjects');
-            const all = await subjects.findOne()
-            console.log(all)
+            // await client.connect();
+            // const subjects = client.db().collection('subjects');
+            // const all = await subjects.findOne()
+            const all = dbJs;
             const profs = Object.entries(all).reduce((acc, [key, value], index) => {
                 Object.entries(value).forEach(([keyArea, valueCodes]) => {
                     Object.entries(valueCodes).forEach(([keyProf, valueCode]) => {
@@ -96,9 +122,13 @@ class ProfDB {
 
 
     async postBranches(subjects, isTrueSubj = false) {
-        let db = await this.getBranches(subjects, isTrueSubj);
-        return db[Object.keys(db)[1]];
+        let db = await this.getBranchesBySubjects(subjects, isTrueSubj);
+        // return db[Object.keys(db)[1]];
+        return Object.keys(db)
     }
+
+
+
 
     getFilteredByScore(score, filteredBySubjProfs) {
         const res = Object.entries(filteredBySubjProfs).reduce((acc, [keySubj, profsValue]) => {
@@ -109,29 +139,42 @@ class ProfDB {
         return res
     }
 
+    getFilterByScoreAllProfs(score) {
+        const res = Object.entries(dbJs).reduce((acc, [subjKey, subjValue]) => {
+            Object.keys(dbJs[subjKey]).forEach(branchKey => {
+                Object.keys(dbJs[subjKey][branchKey]).forEach(prof => {
+                    if (Number(dbJs[subjKey][branchKey][prof].min) <= score) {
+                        acc.push(dbJs[subjKey][branchKey][prof])
+                    }
+                })
+            })
+            return acc
+        }, [])
+        return res
+    }
+
 
 
     async postProfs(subjects) {
-        const branches = await this.getBranches(subjects);
+        const branches = await this.getBranchesBySubjects(subjects);
         const db = Object.keys(branches)[1];
         return this.getProfsBySubj(branches[db]);
     }
 
-
     async setProfsByBraches(chosenBranches, subject, score, isQouta = false) {
-        await client.connect();
-        const elems = client.db().collection('subjects');
-        console.log(subject)
-        const db = await elems.findOne({
-            [subject]: {
-                $exists: true
-            }
-        }, {
-            projection: {
-                [subject]: 1
-            }
-        });
-        this.db = db[subject];
+        // await client.connect();
+        // const elems = client.db().collection('subjects');
+        // const db = await elems.findOne({
+        //     [subject]: {
+        //         $exists: true
+        //     }
+        // }, {
+        //     projection: {
+        //         [subject]: 1
+        //     }
+        // });
+
+        this.db = dbJs[subject];
         const res = chosenBranches.reduce((acc, branch, i) => {
             for (const codeIn in this.db[branch]) {
                 const qoutaOrMin = isQouta ? 'minWithQuota' : 'min';
@@ -174,6 +217,23 @@ class ProfDB {
         return res
     }
 
+    _getBranchesBySubjects(firstSubject, secondSubject) {
+        if (!firstSubject && !secondSubject) return this.getBranches()
+        if (firstSubject && !secondSubject) return Object.keys(dbJs).reduce((acc, subjectKey) => {
+            if (subjectKey.includes(firstSubject.short.toLowerCase())) {
+                Object.keys(dbJs[subjectKey]).forEach(currentBranch => acc.push(currentBranch))
+            }
+            return acc
+        }, [])
+        return this.postBranches({
+            full: firstSubject.short.toLowerCase() + secondSubject.short.toLowerCase(),
+            reverse: secondSubject.short.toLowerCase() + firstSubject.short.toLowerCase()
+        })
+    }
+
+    getProfsBySelectedBranchAndSubject(selectedBranch, firstSubject, secondSubject) {
+
+    }
 }
 
 

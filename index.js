@@ -8,6 +8,9 @@ const fileupload = require('express-fileupload');
 const path = require('path');
 const dirname = path.resolve();
 
+const Filter = require('./services/filter.js')
+const filter = new Filter()
+
 console.log('OQYADMIN works on: ' + PORT)
 app.use(fileupload({}))
 
@@ -33,11 +36,8 @@ app.get('/new-post', (req, res) => {
 
 
 app.post('/branches/postBranches', jsonParser, (req, res) => {
-    console.log('postBranches')
-    console.log(req.body);
     const connect = async () => {
         const allBranches = await profDB.postBranches(req.body);
-        console.log(allBranches)
         res.send(allBranches);
     };
     connect();
@@ -59,17 +59,25 @@ app.post('/profs/postProfs', jsonParser, (req, res) => {
     }
     connect();
 });
-app.post('/getFilteredByScore',jsonParser, (req, res)=> {
-    const connect = ()=> {
-        const {score, filteredBySubjProfs} = req.body
-         res.send(profDB.getFilteredByScore(score, filteredBySubjProfs))
+app.post('/getFilteredByScore', jsonParser, (req, res) => {
+    const connect = () => {
+        const {
+            score,
+            filteredBySubjProfs
+        } = req.body
+        res.send(profDB.getFilteredByScore(score, filteredBySubjProfs))
     }
     connect()
 })
 
 
+app.get('/getBranches', (req, res) => res.send(profDB.getBranches()))
 
+app.get('/getAll', (req, res) => {
+    return res.send(profDB.getAll())
+})
 
+app.post('/getFilterByScoreAllProfs', jsonParser, (req, res) => res.send(profDB.getFilterByScoreAllProfs(req.body.score)))
 
 //get img from new-post
 const multer = require('multer');
@@ -82,8 +90,6 @@ app.use(multer({
 app.post("/upload", async (req, res) => {
     const filedata = req.files.filedata;
     const files = await fs.readdir('./uploads/', 'utf-8', (err, data) => data);
-    console.log('files')
-    console.log(files)
 });
 //for getting images 
 
@@ -112,7 +118,6 @@ app.post('/blog/card', (req, res) => {
                 if (limit === undefined) return true
                 const id = Number(card.id);
                 if (id >= limit.start && id <= limit.end) return true;
-                console.log('false')
                 return false
             })
         });
@@ -126,11 +131,9 @@ app.post('/blog/card', (req, res) => {
 const checkAdminDb = require('./db/checkAdminDb.js');
 
 app.post('/admin', (req, res) => {
-    console.log('req body')
     const keysRaw = Object.keys(req.body)[0];
     const body = JSON.parse(keysRaw)
     const connect = async () => {
-        console.log(body.login, body.password)
         const admin = await checkAdminDb(body.login, body.password);
         res.send(admin);
     }
@@ -150,10 +153,15 @@ app.post('/branches/setProfsByBraches', jsonParser, (req, res) => {
 });
 
 
-
+app.post('/branches/_getBranchesBySubjects', jsonParser, function (req, res) {
+    const connect = async () => {
+        const branches = await profDB._getBranchesBySubjects(req.body.firstSubject, req.body.secondSubject)
+        res.send(branches)
+    }
+    connect()
+})
 
 app.post('/branches/postBranches/telegram', (req, res) => {
-    console.log('postBranches/telegram');
     const subj = Object.keys(req.body)[0];
     const connect = async () => {
         const allBranches = await profDB.postBranches(subj, true);
@@ -170,7 +178,6 @@ app.post('/branches/postBranches/telegram', (req, res) => {
 
 
 app.post('/branches/setProfsByBraches/telegram', jsonParser, (req, res) => {
-    console.log('setProfsByBraches/telegram');
     const connect = async () => {
         const subj = req.body.subjects;
         const branches = req.body.branches;
@@ -180,6 +187,37 @@ app.post('/branches/setProfsByBraches/telegram', jsonParser, (req, res) => {
     }
     connect();
 });
+
+
+
+
+app.get('/getAllProfs', (req, res) => {
+    res.send(filter.getAllProfs())
+})
+
+
+app.post('/fetchProfsBySubjects', jsonParser, (req, res) => {
+    const {
+        firstSubject,
+        secondSubject
+    } = req.body
+    res.send(filter.computeProfsBySubjects(firstSubject, secondSubject))
+})
+
+
+app.post('/fetchProfsByBranches', jsonParser, (req, res) => {
+    const {
+        selectedBranch,
+        firstSubject,
+        secondSubject
+    } = req.body;
+    res.send(filter.computeProfsBySelectedBranch(selectedBranch, firstSubject, secondSubject))
+})
+
+
+
+
+
 
 
 

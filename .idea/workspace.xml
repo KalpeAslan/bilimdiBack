@@ -2,9 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d83b6c21-8592-49b1-b455-bde8584d7ebc" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/db/dbKz.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db/connect.js" beforeDir="false" afterPath="$PROJECT_DIR$/db/connect.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db/db.js" beforeDir="false" afterPath="$PROJECT_DIR$/db/db.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/filter.js" beforeDir="false" afterPath="$PROJECT_DIR$/services/filter.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,7 +37,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../projects/doculite/doculite" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../oqy" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
     <property name="vue.rearranger.settings.migration" value="true" />
@@ -61,6 +64,17 @@
       <workItem from="1622786961073" duration="4775000" />
       <workItem from="1622881899852" duration="598000" />
       <workItem from="1623040732018" duration="608000" />
+      <workItem from="1627936589551" duration="430000" />
+      <workItem from="1628345251488" duration="14489000" />
+      <workItem from="1628495749831" duration="1780000" />
+      <workItem from="1628534815002" duration="1320000" />
+      <workItem from="1628571384153" duration="596000" />
+      <workItem from="1628591832713" duration="596000" />
+      <workItem from="1628615273002" duration="677000" />
+      <workItem from="1629060681368" duration="601000" />
+      <workItem from="1629098375180" duration="1788000" />
+      <workItem from="1629122648112" duration="1821000" />
+      <workItem from="1629135321710" duration="1008000" />
     </task>
     <servers />
   </component>

@@ -1,19 +1,26 @@
 const db = require('../db/db');
+const dbKz = require('../db/dbKz');
 
 
 const subjectsList = ["ГеоБио", "Творч", "ФизМат", "БиоХим", "ГеоИст", "КазКЛит", "РусРЛит",
     "ИноИст", "КазЛит/РусЛит", "МатГео", "ИстЧоп", "ФизХим", "ГеоИно"
 ].map(subj => subj.toLowerCase());
 
-const isTrueSubj = (firstSubject, secondSubject) => subjectsList.includes(firstSubject.toLowerCase() + secondSubject.toLowerCase())
-    ? (firstSubject.toLowerCase() + secondSubject.toLowerCase()) :
+const isTrueSubj = (firstSubject, secondSubject) => subjectsList.includes(firstSubject.toLowerCase() + secondSubject.toLowerCase()) ?
+    (firstSubject.toLowerCase() + secondSubject.toLowerCase()) :
     (secondSubject.toLowerCase() + firstSubject.toLowerCase())
 
-const subjectsLongList = [
-    {
-        short: 'геобио',
-        long: 'География/Биология'
-    },
+const getTrueSubj = (subjects) => {
+    const subjectsList = ["ГеоБио", "Творч", "ФизМат", "БиоХим", "ГеоИст", "КазКЛит", "РусРЛит",
+        "ИноИст", "КазЛит/РусЛит", "МатГео", "ИстЧоп", "ФизХим", "ГеоИно"
+    ].map(subj => subj.toLowerCase());
+    return subjectsList.includes(subjects.full.toLowerCase()) ? subjects.full : subjects.reversed
+}
+
+const subjectsLongList = [{
+    short: 'геобио',
+    long: 'География/Биология'
+},
     {
         short: 'творч',
         long: 'Творческий экзамен'
@@ -69,8 +76,25 @@ const getLongVersionOfSubjectsByShort = (rawSubjects) => subjectsLongList.filter
 
 
 class Filter {
+
+    constructor(lang) {
+        this.db = lang === 'kz' ? dbKz : db
+    }
+
+    getBranches() {
+        return Object.keys(this.db).reduce((acc, current) => {
+            Object.keys(this.db[current]).forEach(item => {
+                if (!acc.includes(item)) {
+                    acc.push(item)
+                }
+            })
+            return acc
+        }, [])
+    }
+
+
     _getAllProfs() {
-        const profs = Object.entries(db).reduce((acc, [key, value], index) => {
+        const profs = Object.entries(this.db).reduce((acc, [key, value], index) => {
             Object.entries(value).forEach(([keyArea, valueCodes]) => {
                 Object.entries(valueCodes).forEach(([keyProf, valueCode]) => {
                     if (key in acc) {
@@ -95,7 +119,7 @@ class Filter {
     }
 
     getAllProfs() {
-        return Object.entries(db).reduce((acc, [subjectKey, subjectValue]) => {
+        return Object.entries(this.db).reduce((acc, [subjectKey, subjectValue]) => {
             Object.entries(subjectValue).forEach(([branchKey, branchValue]) => {
                 Object.entries(branchValue).forEach(([profKey, profValue]) => {
                     profValue.subjects = getLongVersionOfSubjectsByShort(subjectKey)
@@ -108,17 +132,44 @@ class Filter {
 
 
     getAllBranches() {
-        return Object.keys(db).reduce((acc, subject) => {
-            Object.keys(db[subject]).forEach(branchKey => {
+        return Object.keys(this.db).reduce((acc, subject) => {
+            Object.keys(this.db[subject]).forEach(branchKey => {
                 acc.push(branchKey)
             })
             return acc
         }, [])
     }
 
+
+    getBranchesBySubjects(firstSubject, secondSubject) {
+        if (!firstSubject && !secondSubject) return this.getBranches()
+        if (firstSubject && !secondSubject) return Object.keys(this.db).reduce((acc, subjectKey) => {
+            if (subjectKey.includes(firstSubject.short.toLowerCase())) {
+                Object.keys(this.db[subjectKey]).forEach(currentBranch => acc.push(currentBranch))
+            }
+            return acc
+        }, [])
+        return this.postBranches({
+            full: firstSubject.short.toLowerCase() + secondSubject.short.toLowerCase(),
+            reverse: secondSubject.short.toLowerCase() + firstSubject.short.toLowerCase()
+        })
+    }
+
+     postBranches(subjects, isTrueSubj = false) {
+        let db = this._getBranchesBySubjects(subjects, isTrueSubj);
+        return Object.keys(db)
+    }
+
+    _getBranchesBySubjects(chosenSubj, isTrueSubj = false) {
+        const subject = (isTrueSubj ? chosenSubj : getTrueSubj(chosenSubj)).toLowerCase();
+        const result = this.db[subject]
+        return result;
+    }
+
+
+
     computeProfsBySubjects(firstSubject, secondSubject) {
-        console.log(firstSubject)
-        return Object.entries(db).reduce((acc, [subjectKey, subjectValue]) => {
+        return Object.entries(this.db).reduce((acc, [subjectKey, subjectValue]) => {
             if ((firstSubject !== null && secondSubject !== null)) {
                 const firstSubjectShort = firstSubject.toLowerCase()
                 const secondSubjectShort = secondSubject.toLowerCase()
@@ -146,9 +197,9 @@ class Filter {
     }
 
     computeProfsBySelectedBranch(selectedBranch, firstSubject, secondSubject) {
-        return Object.keys(db).reduce((acc, subjectKey) => {
-            Object.keys(db[subjectKey]).forEach(branchKey => {
-                if (branchKey === selectedBranch) Object.entries(db[subjectKey][branchKey]).forEach(([codeProf, prof]) => {
+        return Object.keys(this.db).reduce((acc, subjectKey) => {
+            Object.keys(this.db[subjectKey]).forEach(branchKey => {
+                if (branchKey === selectedBranch) Object.entries(this.db[subjectKey][branchKey]).forEach(([codeProf, prof]) => {
                     if (firstSubject === null && secondSubject === null) return acc.push(prof)
                     const firstSubjectShort = firstSubject.toLowerCase()
                     if (firstSubject && !secondSubject && subjectKey.includes(firstSubjectShort)) return acc.push(prof)
